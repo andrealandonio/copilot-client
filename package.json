@@ -1,0 +1,37 @@
+{
+  "name": "copilot-client",
+  "version": "1.0.0",
+  "description": "A sample client app for work with Copilot API",
+  "main": "index.js",
+  "scripts": {
+  },
+  "keywords": ["copilot", "api"],
+  "author": "Andrea Landonio",
+  "license": "ISC",
+  "devDependencies": {
+    "@condenast/copilot-api-client": "3.0.1",
+    "@types/jest": "^23.3.1",
+    "@types/lodash": "4.14.66",
+    "@types/node": "7.0.18",
+    "@types/query-string": "^4.3.1",
+    "@types/request-promise-native": "^1.0.15",
+    "@types/url-join": "0.8.2",
+    "@types/winston": "2.3.3",
+    "jest": "^23.4.2",
+    "rimraf": "2.6.1",
+    "tslint": "5.2.0",
+    "tslint-config-airbnb": "5.0.1",
+    "tsutils": "1.6.0",
+    "typescript": "2.3.2"
+  },
+  "dependencies": {
+    "command-line-usage": "*",
+    "hawk": "6.0.1",
+    "lodash": "^4.17.11",
+    "query-string": "^4.3.4",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
+    "url-join": "2.0.2",
+    "winston": "2.3.1"
+  }
+}
