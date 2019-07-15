@@ -29,7 +29,7 @@
   "dependencies": {
     "command-line-usage": "*",
     "hawk": "6.0.1",
-    "lodash": "^4.17.11",
+    "lodash": ">=4.17.13",
     "query-string": "^4.3.4",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
