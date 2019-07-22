@@ -190,6 +190,58 @@ switch (method) {
       });
     });
     break;
+  case 'sync_to_rms':
+    // Sync collections entity to RMS
+    // example: node index sync_to_rms categories table_name 'parent-category-slug'
+
+    /*
+    cURL example
+    export PARENT_ID=XXXXX
+    export NEW_ID=$(curl -sd '{"meta": {"collectionName": "categories", "modelName": "category"}, "name": "XXXXX", "slug": "XXXXX"}' -H "Content-Type: application/json" -X POST "http://lacucinaitaliana-service.local:8080/categories" | jq -r .id)
+    curl -sd "[{\"id\": \"${PARENT_ID}\", \"meta\": {\"collectionName\": \"categories\", \"modelName\": \"category\"}}]" -H "Content-Type: application/json" -X PUT "http://lacucinaitaliana-service.local:8080/categories/${NEW_ID}/rels/parent"
+    */
+
+    /*
+    List of items list replaces:
+    - " => '
+    - '' => "
+    - ,' => ',
+    - delete last comma (,)
+    */
+
+    // Items list
+    const items = [
+      '013f7dcb-0f6a-37c6-9701-ed47ffa01dd4|{"title":"Gnocchi","slug":"gnocchi","letter":"G"}',
+      '016497a0-15a7-37cf-9ce2-28e786805da6|{"title":"Baking soda","slug":"baking-soda","letter":"B"}',
+      'ff8ec670-0183-350c-87e2-afea2a35d353|{"title":"Shellfish","slug":"shellfish","letter":"S"}'
+    ];
+
+    // Loop over items
+    for (let item of items) {
+      const item_array = item.split('|');
+      const tax_id = item_array[0];
+      // console.log(item_array[0] + ' - ' + JSON.parse(item_array[1]).title + ' - ' + JSON.parse(item_array[1]).slug);
+
+      // Create new item
+      const createNewCategoryResult = client.create(collection, JSON.parse('{"name": "' + JSON.parse(item_array[1]).title + '", "slug": "' + JSON.parse(item_array[1]).slug + '"}'));
+      createNewCategoryResult.then((createNewCategoryEntity) => {
+        // console.log("new item id: " + createNewCategoryEntity.id);
+
+        // Show update statement
+        console.log("UPDATE " + payload + " SET old_id = id, id = '" + createNewCategoryEntity.id + "' WHERE id = '" + tax_id + "';");
+
+        // Relate new item to the parent
+        const parentCategory = client.getCategory(value);
+        parentCategory.then((parentCategoryEntity) => {
+          // console.log("parent item id: " + parentCategoryEntity.id);
+
+          client.relate(collection, createNewCategoryEntity.id, {
+            parent: [ parentCategoryEntity ]
+          });
+        });
+      });
+    }
+    break;
   default:
     // Show usage
     const sections = [
