@@ -29,14 +29,14 @@ if (method !== undefined) {
 
 // Please setup constant before start a BULK operation
 const channelId = '5d03a96319d1321d6d2f0c37';
-const channelSlug = 'trends/events/';
+const channelSlug = 'contentreferences/';
 const channelName = 'Trends';
 const subChannelName = 'Events';
 const tagId = '5d03a66f19d132b6e12f0c22';
 const tagName = 'Tag1';
 const typeId = '5d03a59619d1327e282f0c1f';
 const layoutId = '5d03a75619d13249962f0c26';
-const photoId = '5d0770f419d132d3442f0c4a';
+const photoId = '5d4162c65cca710009d59686';
 const authorId = '5c944d3c0be26d08c5467aa2';
 const lang = 'en-US';
 const customAdvertisementZone = '';
@@ -238,6 +238,116 @@ switch (method) {
           client.relate(collection, createNewCategoryEntity.id, {
             parent: [ parentCategoryEntity ]
           });
+        });
+      });
+    }
+    break;
+  case 'taxonomies_first_creation':
+    // Provide first creation for shared taxonomies
+    // example: node index taxonomies_first_creation
+
+    /*
+    Query for extracting data
+    select concat('diet', '|', attribute_data, ',') from cn_rms_diets rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('level', '|', attribute_data, ',') from cn_rms_levels rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('meal', '|', attribute_data, ',') from cn_rms_meals rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('occasion', '|', attribute_data, ',') from cn_rms_occasions rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('region', '|', attribute_data, ',') from cn_rms_regions rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('season', '|', attribute_data, ',') from cn_rms_seasons rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('dishes', '|', attribute_data, ',') from cn_rms_dishes rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('tags', '|', attribute_data, ',') from cn_rms_topics rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US'
+    union
+    select concat('ingredient', '|', attribute_data, ',') from cn_rms_ingredients rms, rainlab_translate_attributes t where rms.id = t.model_id and t.locale = 'en-US';
+
+    List of items list replaces:
+    - " => '
+    - '' => "
+    - ,' => ',
+    - delete last comma (,)
+    - check escaping errors
+    */
+
+    // Items list
+    const rows = [
+      'diet|{"title":"Low Calorie","slug":"low-calorie","order":0}',
+      'diet|{"title":"Gluten Free","slug":"gluten-free","order":0}',
+      'diet|{"title":"Vegan","slug":"vegan","order":0}',
+      'diet|{"title":"Vegetarian","slug":"vegetarian","order":0}',
+      'level|{"title":"Intermediate","slug":"intermediate","order":0}',
+      'level|{"title":"Advanced","slug":"advanced","order":0}',
+      'level|{"title":"Easy","slug":"easy","order":0}',
+      'level|{"title":"Hard","slug":"hard","order":0}'
+    ];
+
+    // Set default collection
+    const default_collection = 'categories';
+
+    // Loop over items
+    for (let row of rows) {
+      const row_array = row.split('|');
+      const tax_parent_slug = row_array[0];
+
+      // Create new item
+      const createNewCategoryResult = client.create(default_collection, JSON.parse(
+        '{"name": "' + JSON.parse(row_array[1]).title + '", "slug": "' + JSON.parse(row_array[1]).slug + '"}'
+      ));
+      createNewCategoryResult.then((createNewCategoryEntity) => {
+        console.log(tax_parent_slug + " new item id: " + createNewCategoryEntity.id);
+
+        // Relate new item to the parent
+        const parentCategory = client.getCategory(tax_parent_slug);
+        parentCategory.then((parentCategoryEntity) => {
+          client.relate(default_collection, createNewCategoryEntity.id, {
+            parent: [ parentCategoryEntity ]
+          });
+        });
+      });
+    }
+    break;
+  case 'recipes_first_creation':
+    // Provide first creation for recipes
+    // example: node index recipes_first_creation contentreferences
+
+    // Recipes list
+    const recipes = [
+      "209279|Fettuccine all'abruzzese",
+      "209326|Risotto all'astice"
+    ];
+
+    for (let recipe of recipes) {
+      const recipe_array = recipe.split('|');
+
+      // Create new item
+      const created_recipe = client.create(collection, JSON.parse(
+        '{"hed": "' + recipe_array[1] + '", "identifier": "' + recipe_array[0] + '", "provider": "rms-recipe", "lang": ["en-US", "en-GB", "it-IT"]}'
+      ));
+      created_recipe.then((createdRecipeEntity) => {
+        console.log("created recipe id: " + createdRecipeEntity.id);
+
+        // Relate photosTout
+        client.relate(collection, createdRecipeEntity.id, {
+          photosTout: [{
+            id: photoId,
+            meta: { collectionName: 'photos', modelName: 'photo' }
+          }]
+        });
+
+        // Publish item
+        const published_recipe = client.publish(collection, createdRecipeEntity.id, {
+          uri: channelSlug + createdRecipeEntity.id,
+          pubDate: new Date(),
+          revision: 0,
+          revisionAuthor: revisionAuthor
+        });
+        published_recipe.then((publishedRecipeEntity) => {
+          console.log("published recipe id: " + publishedRecipeEntity.id);
         });
       });
     }
