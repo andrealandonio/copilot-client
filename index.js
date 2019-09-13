@@ -352,6 +352,104 @@ switch (method) {
       });
     }
     break;
+  case 'createBrandmag':
+    // Provide first creation for brandmag
+    // example: node index createBrandmag '' '{"name": "Sample"}' sample
+
+    // At the end you need to add brand logo and advertiser, then add archive image in bundle and publish it
+
+    // Create brand
+    const brand = client.create('brands', JSON.parse(payload));
+    brand.then((createdBrandEntity) => {
+      console.log("brand id: " + createdBrandEntity.id);
+
+      // Create brandmag category
+      const brandmagCategory = client.create('categories', JSON.parse(
+        '{"name": "' + createdBrandEntity.name + '", "slug": "' + value + '"}'
+      ));
+      brandmagCategory.then((createdBrandmagEntity) => {
+        console.log("brandmag id: " + createdBrandmagEntity.id);
+
+        // Relate brandmag to the parent (brandmag root)
+        const parentBrandmagCategory = client.getCategory('brandmag');
+        parentBrandmagCategory.then((parentBrandmagCategoryEntity) => {
+          client.relate('categories', createdBrandmagEntity.id, {
+            parent: [ parentBrandmagCategoryEntity ]
+          });
+
+          // Find "Itinerary" category
+          const itineraryCategory = client.getCategory('itinerary');
+          itineraryCategory.then((itineraryCategoryEntity) => {
+            console.log("itinerary id: " + itineraryCategoryEntity.id);
+
+            // Create bundle
+            const bundle = client.create('bundles', JSON.parse(
+              '{' +
+                      '"bundleType": "brandmag",' +
+                      '"hed": "' + createdBrandEntity.name + '",' +
+                      '"containers": [' +
+                        '{' +
+                          '"curationContainerType": "hero",' +
+                          '"hed": "brand",' +
+                          '"itemLimit": 2,' +
+                          '"curations": [{' +
+                              '"contentModel": "brand",' +
+                              '"hed": "' + createdBrandEntity.name + '",' +
+                              '"index": 0,' +
+                              '"type": "contentcuration",' +
+                              '"contentId": "' + createdBrandEntity.id + '"' +
+                          '}],' +
+                          '"type": "curationcontainer"' +
+                        '},' +
+                        '{' +
+                          '"curationContainerType": "group",' +
+                          '"hed": "highlights",' +
+                          '"itemLimit": 8,' +
+                          '"curations": [],' +
+                          '"type": "curationcontainer"' +
+                        '},' +
+                        '{' +
+                          '"curationContainerType": "river",' +
+                          '"hed": "listing",' +
+                          '"itemLimit": 14,' +
+                          '"curations": [],' +
+                          '"searches": [{' +
+                            '"q": "",' +
+                            '"sort": "publishDate desc",' +
+                            '"additionalFilters": [{' +
+                              '"key": "notcategoryIds",' +
+                              '"value": ["' + itineraryCategoryEntity.id + '"]' +
+                            '}],' +
+                            '"filters": {' +
+                              '"tags": [],' +
+                              '"types": ["article"],' +
+                              '"nottypes": [],' +
+                              '"channel": [],' +
+                              '"subchannel": [],' +
+                              '"contributor": [],' +
+                              '"notid": [],' +
+                              '"nottags": [],' +
+                              '"contentSource": [],' +
+                              '"issueDate": [],' +
+                              '"category": [],' +
+                              '"categoryIds": ["' + createdBrandmagEntity.id + '"]' +
+                            '},' +
+                            '"type": "curatedsearch"' +
+                          '}],' +
+                          '"type": "curationcontainer"' +
+                        '}' +
+                      ']' +
+                    '}'));
+            bundle.then((createdBundleEntity) => {
+              console.log("bundle id: " + createdBundleEntity.id);
+
+              console.log("Process finished! You need now to add brand logo and advertiser, then add archive image in bundle and publish it!");
+            });
+          });
+        });
+      });
+    });
+    break;
   default:
     // Show usage
     const sections = [
@@ -404,6 +502,22 @@ switch (method) {
           },
           {
             name: 'createChildCategory',
+            description: ''
+          },
+          {
+            name: 'sync_to_rms',
+            description: ''
+          },
+          {
+            name: 'taxonomies_first_creation',
+            description: ''
+          },
+          {
+            name: 'recipes_first_creation',
+            description: ''
+          },
+          {
+            name: 'createBrandmag',
             description: ''
           }
         ]
